@@ -16,3 +16,4 @@ main:
 inf_loop:
   nop
   b inf_loop
+  
