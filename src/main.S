@@ -16,11 +16,12 @@ main:
   bl set_GPIOTE
   bl set_interupts
   bl set_priorities
-  mov r7, 0
+  ldr r1, =display_frame
+
 
 @ infinite catch loop
 inf_loop:
-  nop
+  bl display_image
   b inf_loop
 
 .global set_GPIOTE
@@ -44,6 +45,7 @@ set_GPIOTE:
   str r1, [r0]
   bx lr
 .size set_GPIOTE, .-set_GPIOTE
+
 
 .global set_interupts
 .type set_interupts, %function
@@ -72,6 +74,7 @@ set_interupts:
   bx lr
 .size set_interupts, .-set_interupts
 
+
 .global set_priorities
 .type set_priorities, %function
 set_priorities:
@@ -88,6 +91,7 @@ set_priorities:
   bx lr
 .size set_priorities, .-set_priorities
 
+
 .global SysTick_Handler
 .type SysTick_Handler, %function
 SysTick_Handler:
@@ -96,6 +100,7 @@ SysTick_Handler:
   pop {lr}
   bx lr
 .size SysTick_Handler, .-SysTick_Handler
+
 
 .global GPIOTE_IRQHandler
 .type GPIOTE_IRQHandler, %function
@@ -123,27 +128,52 @@ end_GPIOTE_IRQ:
   bx lr
 .size GPIOTE_IRQHandler, .-GPIOTE_IRQHandler
 
+
 .global button_a
 .type button_a, %function
 button_a:
   push {lr}
-  mov r0, 0
-  ldr r1, =display_frame
-  bl display_row
+  @ mov r0, 0
+  @ ldr r1, =display_frame
+  @ bl display_row
   pop {lr}
   bx lr
 .size button_a, .-button_a
 
+
 .global button_b
 .type button_b, %function
 button_b:
-push {lr}
-  mov r0, 1
-  ldr r1, =display_frame
-  bl display_row
+  push {lr}
+  @ mov r0, 1
+  @ ldr r1, =display_frame
+  @ bl display_row
   pop {lr}
   bx lr
 .size button_b, .-button_b
+
+
+.global display_image
+.type display_image, %function
+// Displays an image
+// --parameters--
+// R1: Location of start frame
+// --return--
+//None
+display_image:
+  push {r0, r1, r2, lr}
+  mov r0, #0
+display_image_loop:
+  cmp r0, #5
+  beq display_image_end
+  bl display_row
+  add r0, #1
+  b display_image_loop
+display_image_end:
+  pop {r0, r1, r2, lr}
+  bx lr
+.size display_image, .-display_image
+
 
 .global display_row
 .type display_row, %function
@@ -178,6 +208,23 @@ display_row:
   pop {r0, r1, r2, r3, lr}
   bx lr
 .size display_row, .-display_row
+
+
+.global short_delay
+.type short_delay, %function
+// Pauses the program breifley
+short_delay:
+  push {r0, lr}
+  ldr r0, =0x2
+delay_sub:
+  subs r0, 1
+  bmi delay_end
+  b delay_sub
+delay_end:
+  pop {r0, lr}
+  bx lr
+.size short_delay, .-short_delay
+
 
 .data
 display_frame:
