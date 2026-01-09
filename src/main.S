@@ -16,6 +16,7 @@ main:
   bl set_GPIOTE
   bl set_interupts
   bl set_priorities
+  mov r7, 0
 
 @ infinite catch loop
 inf_loop:
@@ -49,23 +50,23 @@ set_GPIOTE:
 set_interupts:
   // Enable SYST_CSR
   ldr r4, =ADR_SYST_CSR
-  ldr r2, =0
+  ldr r2, =0 
   ldr r3, [r4]
   mov r5, 0b1
   lsl r5, r5, r2
-  orr r3, r3, r5
+  orr r3, r3, r5 
   // Set CLKSOURCE
-  ldr r2, =2
+  ldr r2, =2 
   mov r5, 0b1
   lsl r5, r5, r2
-  orr r3, r3, r5
-  ldr r2, =1
+  orr r3, r3, r5 
+  ldr r2, =1 
   mov r5, 0b1
   lsl r5, r5, r2
-  orr r3, r3, r5
+  orr r3, r3, r5 
   str r3, [r4]
   // Set SYSY_RVR: 4000000
-  ldr r0, =ADR_SYST_CSR
+  ldr r0, =ADR_SYST_RVR
   ldr r1, =0x3D0900
   str r1, [r0]
   bx lr
@@ -85,3 +86,12 @@ set_priorities:
   and r1, r1, 0xFF1FFFFF
   str r1, [r0]
   bx lr
+.size set_priorities, .-set_priorities
+
+.global SysTick_Handler
+.type SysTick_Handler, %function
+SysTick_Handler:
+  add r7, 1
+  bx lr
+.size SysTick_Handler, .-SysTick_Handler
+  
