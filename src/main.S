@@ -127,6 +127,9 @@ end_GPIOTE_IRQ:
 .type button_a, %function
 button_a:
   push {lr}
+  mov r0, 0
+  ldr r1, =display_frame
+  bl display_row
   pop {lr}
   bx lr
 .size button_a, .-button_a
@@ -134,8 +137,52 @@ button_a:
 .global button_b
 .type button_b, %function
 button_b:
-  push {lr}
+push {lr}
+  mov r0, 1
+  ldr r1, =display_frame
+  bl display_row
   pop {lr}
   bx lr
 .size button_b, .-button_b
-  
+
+.global display_row
+.type display_row, %function
+// Displayes a given row of a frame
+// --parameters
+// R0: The row number to display (0-4)
+// R1: The location of the frame
+// --retruen--
+// None
+display_row:
+  push {r0, r1, r2, r3, lr}
+  // Regoranise registers
+  mov r2, r0
+  mov r3, #1
+  lsl r3, r2
+  lsl r2, #2
+  ldr r0, [r1, r2]
+  // Initalise the LEDs
+  push {r0, r1, r2, r3, lr}
+  bl init_leds
+  pop {r0, r1, r2, r3, lr}
+  // Write to the columns
+  push {r0, r1, r2, r3, lr}
+  bl write_column_pins_natural
+  pop {r0, r1, r2, r3, lr}
+  // Write to the rows
+  mov r0, r3
+  push {r0, r1, r2, r3, lr}
+  bl write_row_pins
+  pop {r0, r1, r2, r3, lr}
+  //End
+  pop {r0, r1, r2, r3, lr}
+  bx lr
+.size display_row, .-display_row
+
+.data
+display_frame:
+.word 0b01010
+.word 0b10101
+.word 0b01010
+.word 0b10101
+.word 0b01010
