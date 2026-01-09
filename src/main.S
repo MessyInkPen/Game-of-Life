@@ -14,8 +14,8 @@
 //  - sets priorities
 main:
   bl set_GPIOTE
-  @ bl set_interupts
-  @ bl set_priorities
+  bl set_interupts
+  bl set_priorities
 
 @ infinite catch loop
 inf_loop:
@@ -40,5 +40,48 @@ set_GPIOTE:
   //Enable GPIOTE interrupt in NVIC
   ldr r0, =NVIC_ISER0
   ldr r1, =(1 << 6)
+  str r1, [r0]
+  bx lr
+.size set_GPIOTE, .-set_GPIOTE
+
+.global set_interupts
+.type set_interupts, %function
+set_interupts:
+  // Enable SYST_CSR
+  ldr r4, =ADR_SYST_CSR
+  ldr r2, =0
+  ldr r3, [r4]
+  mov r5, 0b1
+  lsl r5, r5, r2
+  orr r3, r3, r5
+  // Set CLKSOURCE
+  ldr r2, =2
+  mov r5, 0b1
+  lsl r5, r5, r2
+  orr r3, r3, r5
+  ldr r2, =1
+  mov r5, 0b1
+  lsl r5, r5, r2
+  orr r3, r3, r5
+  str r3, [r4]
+  // Set SYSY_RVR: 4000000
+  ldr r0, =ADR_SYST_CSR
+  ldr r1, =0x3D0900
+  str r1, [r0]
+  bx lr
+.size set_interupts, .-set_interupts
+
+.global set_priorities
+.type set_priorities, %function
+set_priorities:
+  // Timer interupts
+  ldr r0, =0xE000ED20
+  ldr r1, [r0]
+  orr r1, r1, 0xE0000000
+  str r1, [r0]
+  // GPIOTE interupts
+  ldr r0, =0xE000E404
+  ldr r1, [r0]
+  and r1, r1, 0xFF1FFFFF
   str r1, [r0]
   bx lr
