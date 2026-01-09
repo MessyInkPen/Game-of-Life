@@ -91,7 +91,51 @@ set_priorities:
 .global SysTick_Handler
 .type SysTick_Handler, %function
 SysTick_Handler:
+  push {lr}
   add r7, 1
+  pop {lr}
   bx lr
 .size SysTick_Handler, .-SysTick_Handler
+
+.global GPIOTE_IRQHandler
+.type GPIOTE_IRQHandler, %function
+GPIOTE_IRQHandler:
+  push {lr}
+  // Read and clear both event registers
+  ldr r0, = GPIOTE_EVENTS_IN0
+  ldr r1, [r0]
+  mov r2, #0
+  str r2, [r0]
+  ldr r0, =GPIOTE_EVENTS_IN0 + 4
+  ldr r3, [r0]
+  str r2, [r0]
+  // Call button handler if button was pressed
+call_a:
+  cmp r1, #1
+  bne call_b
+  bl button_a
+call_b:
+  cmp r3, #1
+  bne end_GPIOTE_IRQ
+  bl button_b
+end_GPIOTE_IRQ:
+  pop {lr}
+  bx lr
+.size GPIOTE_IRQHandler, .-GPIOTE_IRQHandler
+
+.global button_a
+.type button_a, %function
+button_a:
+  push {lr}
+  pop {lr}
+  bx lr
+.size button_a, .-button_a
+
+.global button_b
+.type button_b, %function
+button_b:
+  push {lr}
+  pop {lr}
+  bx lr
+.size button_b, .-button_b
   
