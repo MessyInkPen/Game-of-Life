@@ -95,9 +95,32 @@ set_priorities:
 .global SysTick_Handler
 .type SysTick_Handler, %function
 SysTick_Handler:
-  push {lr}
+  push {r0, r1, lr}
   add r7, 1
-  pop {lr}
+  and r7, r7, 0b1
+  cmp r7, #0
+  ldr r0, =display_frame
+  beq even
+odd:
+  mov r1, 0b01010
+  str r1, [r0]
+  str r1, [r0, 8]
+  str r1, [r0, 16]
+  mov r1, 0b10101
+  str r1, [r0, 4]
+  str r1, [r0, 12]
+  b systick_end
+even:
+  mov r1, 0b10101
+  str r1, [r0]
+  str r1, [r0, 8]
+  str r1, [r0, 16]
+  mov r1, 0b01010
+  str r1, [r0, 4]
+  str r1, [r0, 12]
+systick_end:
+
+  pop {r0, r1, lr}
   bx lr
 .size SysTick_Handler, .-SysTick_Handler
 
