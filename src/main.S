@@ -16,7 +16,7 @@ main:
   bl set_GPIOTE
   bl set_interupts
   bl set_priorities
-  ldr r1, =display_frame
+  ldr r1, =displayed_frame
 
 
 @ infinite catch loop
@@ -99,27 +99,18 @@ SysTick_Handler:
   add r7, 1
   and r7, r7, 0b1
   cmp r7, #0
-  ldr r0, =display_frame
+  ldr r0, =displayed_frame
   beq even
 odd:
-  mov r1, 0b01010
-  str r1, [r0]
-  str r1, [r0, 8]
-  str r1, [r0, 16]
-  mov r1, 0b10101
-  str r1, [r0, 4]
-  str r1, [r0, 12]
+  ldr r1, =displayed_frame
+  ldr r0, =ready_frame_1
+  bl copy_frame
   b systick_end
 even:
-  mov r1, 0b10101
-  str r1, [r0]
-  str r1, [r0, 8]
-  str r1, [r0, 16]
-  mov r1, 0b01010
-  str r1, [r0, 4]
-  str r1, [r0, 12]
+  ldr r1, =displayed_frame
+  ldr r0, =ready_frame_2
+  bl copy_frame
 systick_end:
-
   pop {r0, r1, lr}
   bx lr
 .size SysTick_Handler, .-SysTick_Handler
@@ -156,9 +147,6 @@ end_GPIOTE_IRQ:
 .type button_a, %function
 button_a:
   push {lr}
-  @ mov r0, 0
-  @ ldr r1, =display_frame
-  @ bl display_row
   pop {lr}
   bx lr
 .size button_a, .-button_a
@@ -168,9 +156,6 @@ button_a:
 .type button_b, %function
 button_b:
   push {lr}
-  @ mov r0, 1
-  @ ldr r1, =display_frame
-  @ bl display_row
   pop {lr}
   bx lr
 .size button_b, .-button_b
@@ -233,6 +218,30 @@ display_row:
 .size display_row, .-display_row
 
 
+.global copy_frame
+.type copy_frame, %function
+// Copies all rows of a frame from a source to a destination
+// --parameters
+// R0: Source frame
+// R1: destination frame
+// --retruen--
+// None
+copy_frame:
+  push {r2, r3, lr}
+  mov r3, #0
+copy_frame_loop:
+  cmp r3, #20
+  beq copy_frame_end
+  ldr r2, [r0, r3]
+  str r2, [r1, r3]
+  add r3, r3, 4
+  b copy_frame_loop
+copy_frame_end:
+  pop {r2, r3, lr}
+  bx lr
+.size copy_frame, .-copy_frame
+
+
 .global short_delay
 .type short_delay, %function
 // Pauses the program breifley
@@ -250,9 +259,25 @@ delay_end:
 
 
 .data
-display_frame:
+displayed_frame:
 .word 0b01010
 .word 0b10101
 .word 0b01010
 .word 0b10101
 .word 0b01010
+
+
+ready_frame_1:
+.word 0b11111
+.word 0b00000
+.word 0b11111
+.word 0b00000
+.word 0b11111
+
+
+ready_frame_2:
+.word 0b00000
+.word 0b11111
+.word 0b00000
+.word 0b11111
+.word 0b00000
